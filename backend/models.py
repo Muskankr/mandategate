@@ -65,6 +65,16 @@ class ApprovalRequest(Base):
     product = relationship("Product")
 
 
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(String, primary_key=True, default=lambda: generate_id("usr"))
+    username = Column(String, unique=True, nullable=False, index=True)
+    email = Column(String, unique=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    created_at = Column(String, default=lambda: datetime.now(timezone.utc).isoformat())
+
+
 class Transaction(Base):
     __tablename__ = "transactions"
 

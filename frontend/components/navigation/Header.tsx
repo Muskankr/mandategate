@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Menu,
@@ -11,14 +11,76 @@ import {
   ExternalLink,
   CheckCircle2,
   AlertTriangle,
+  Loader2,
 } from "lucide-react";
+import { api, isDemoMode } from "@/lib/api";
+import { ApprovalRequest, Transaction } from "@/types";
 
 interface HeaderProps {
   onOpenMobileMenu: () => void;
 }
 
+interface Notification {
+  id: string;
+  type: "warning" | "success" | "info";
+  title: string;
+  subtitle: string;
+  href?: string;
+}
+
 export function Header({ onOpenMobileMenu }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchNotifications = async () => {
+    setLoading(true);
+    try {
+      const [approvals, transactions] = await Promise.all([
+        api.getApprovals(),
+        api.getTransactions(),
+      ]);
+
+      const items: Notification[] = [];
+
+      const pending = approvals.filter((a: ApprovalRequest) => a.status === "PENDING");
+      for (const a of pending.slice(0, 3)) {
+        items.push({
+          id: a.id,
+          type: "warning",
+          title: `Approval Required: ${a.product.title}`,
+          subtitle: `Amount ($${a.amount.toFixed(2)}) exceeds threshold.`,
+          href: "/approvals",
+        });
+      }
+
+      const recent = transactions
+        .filter((t: Transaction) => t.payment_status === "COMPLETED")
+        .slice(0, 2);
+      for (const t of recent) {
+        items.push({
+          id: t.id,
+          type: "success",
+          title: `Completed: ${t.product_title}`,
+          subtitle: `$${t.amount.toFixed(2)} — ${t.mandate_name}`,
+        });
+      }
+
+      setNotifications(items);
+    } catch {
+      setNotifications([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const pendingCount = notifications.filter((n) => n.type === "warning").length;
 
   return (
     <header className="h-16 border-b border-card-border bg-navy-950/70 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
@@ -35,7 +97,7 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
           <span className="px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-300 font-semibold border border-violet-500/30">
             PayPal AI Agent Guard
           </span>
-          <span className="text-slate-500">•</span>
+          <span className="text-slate-500">&bull;</span>
           <span className="text-slate-400 font-medium">Deterministic Spending Policy Engine</span>
         </div>
       </div>
@@ -52,12 +114,17 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
         {/* Notifications toggle */}
         <div className="relative">
           <button
-            onClick={() => setShowNotifications(!showNotifications)}
+            onClick={() => {
+              setShowNotifications(!showNotifications);
+              if (!showNotifications) fetchNotifications();
+            }}
             className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-navy-850 relative transition-colors"
             aria-label="View notifications"
           >
             <Bell className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-400"></span>
+            {pendingCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-400"></span>
+            )}
           </button>
 
           {showNotifications && (
@@ -66,40 +133,49 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
                   Agent Notifications
                 </span>
-                <span className="text-[11px] text-amber-400 font-medium">2 pending</span>
+                {pendingCount > 0 && (
+                  <span className="text-[11px] text-amber-400 font-medium">
+                    {pendingCount} pending
+                  </span>
+                )}
               </div>
               <div className="py-2 space-y-2">
-                <Link
-                  href="/approvals"
-                  onClick={() => setShowNotifications(false)}
-                  className="block p-2.5 rounded-lg bg-navy-850 hover:bg-navy-800 transition-colors"
-                >
-                  <div className="flex items-start gap-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs font-semibold text-slate-200">
-                        Approval Required: Keychron Q1 Pro
-                      </p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
-                        Amount ($199.00) exceeds threshold ($150.00).
-                      </p>
-                    </div>
+                {loading && notifications.length === 0 && (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="w-4 h-4 text-violet-400 animate-spin" />
                   </div>
-                </Link>
+                )}
+                {!loading && notifications.length === 0 && (
+                  <p className="text-xs text-slate-500 text-center py-4">No notifications</p>
+                )}
+                {notifications.map((n) => {
+                  const Icon = n.type === "warning" ? AlertTriangle : CheckCircle2;
+                  const iconColor = n.type === "warning" ? "text-amber-400" : "text-emerald-400";
+                  const content = (
+                    <div className="flex items-start gap-2">
+                      <Icon className={`w-4 h-4 ${iconColor} shrink-0 mt-0.5`} />
+                      <div>
+                        <p className="text-xs font-semibold text-slate-200">{n.title}</p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">{n.subtitle}</p>
+                      </div>
+                    </div>
+                  );
 
-                <div className="p-2.5 rounded-lg bg-navy-850">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs font-semibold text-slate-200">
-                        Auto-purchase Allowed: MX Master 3S
-                      </p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
-                        Completed within Engineering Hardware mandate.
-                      </p>
+                  return n.href ? (
+                    <Link
+                      key={n.id}
+                      href={n.href}
+                      onClick={() => setShowNotifications(false)}
+                      className="block p-2.5 rounded-lg bg-navy-850 hover:bg-navy-800 transition-colors"
+                    >
+                      {content}
+                    </Link>
+                  ) : (
+                    <div key={n.id} className="p-2.5 rounded-lg bg-navy-850">
+                      {content}
                     </div>
-                  </div>
-                </div>
+                  );
+                })}
               </div>
               <div className="pt-2 border-t border-card-border text-center">
                 <Link
@@ -128,4 +204,3 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
     </header>
   );
 }
-

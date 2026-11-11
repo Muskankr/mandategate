@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { ApprovalRequest } from "@/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { StatusBadge } from "@/ui/StatusBadge";
@@ -86,10 +87,12 @@ export function ApprovalCard({ request, onProcessed }: ApprovalCardProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Left: Product preview */}
         <div className="flex items-center gap-3 md:col-span-1">
-          <img
+          <Image
             src={request.product.image_url}
             alt={request.product.title}
-            className="w-16 h-16 rounded-lg object-cover border border-card-border shrink-0"
+            width={64}
+            height={64}
+            className="rounded-lg object-cover border border-card-border shrink-0"
           />
           <div className="text-xs space-y-1">
             <p className="font-semibold text-slate-200">{request.product.merchant}</p>

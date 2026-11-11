@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     PAYPAL_CLIENT_SECRET: str = ""
     PAYPAL_BASE_URL: str = "https://api-m.sandbox.paypal.com"
     FRONTEND_URL: str = "http://localhost:3000"
+    JWT_SECRET_KEY: str = "mandategate-dev-secret-change-in-production"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRATION_MINUTES: int = 60
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

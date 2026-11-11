@@ -8,6 +8,7 @@ from schemas import (
     CapturePayPalOrderRequest,
     CapturePayPalOrderResponse,
     PayPalOrderResponse,
+    PayPalWebhookEvent,
 )
 from services.paypal_service import create_order, capture_order
 
@@ -67,3 +68,27 @@ async def capture_paypal_order(body: CapturePayPalOrderRequest, db: Session = De
         order_id=result["order_id"],
         status=result["status"],
     )
+
+
+@router.post("/webhook")
+async def paypal_webhook(event: PayPalWebhookEvent, db: Session = Depends(get_db)):
+    order_id = event.resource.get("id", "")
+    txn = db.query(Transaction).filter(Transaction.paypal_order_id == order_id).first()
+
+    if event.event_type == "PAYMENT.CAPTURE.COMPLETED":
+        if txn and txn.payment_status == "PENDING":
+            txn.payment_status = "COMPLETED"
+            txn.decision_reason = "Confirmed via PayPal webhook (PAYMENT.CAPTURE.COMPLETED)"
+            if txn.mandate_id:
+                mandate = db.query(Mandate).filter(Mandate.id == txn.mandate_id).first()
+                if mandate:
+                    mandate.spent_amount += txn.amount
+                    mandate.remaining_budget = max(0, mandate.total_budget - mandate.spent_amount)
+            db.commit()
+    elif event.event_type == "PAYMENT.CAPTURE.DENIED":
+        if txn and txn.payment_status == "PENDING":
+            txn.payment_status = "FAILED"
+            txn.decision_reason = "Payment denied via PayPal webhook (PAYMENT.CAPTURE.DENIED)"
+            db.commit()
+
+    return {"status": "received", "event_id": event.id}

@@ -1,23 +1,44 @@
-import sys
-import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from config import get_settings
 from database import engine, SessionLocal, Base
 from models import Mandate, Product, ApprovalRequest, Transaction, generate_id
 
-from routers import mandates, agent, policy, approvals, paypal, transactions, dashboard
+from routers import mandates, agent, policy, approvals, paypal, transactions, dashboard, auth
 
 settings = get_settings()
+limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
+
+
+def expire_stale_mandates():
+    db = SessionLocal()
+    try:
+        now = datetime.now(timezone.utc)
+        active = db.query(Mandate).filter(Mandate.status == "ACTIVE").all()
+        for m in active:
+            try:
+                exp = datetime.fromisoformat(m.expiry_date.replace("Z", "+00:00"))
+                if exp < now:
+                    m.status = "EXPIRED"
+            except (ValueError, AttributeError):
+                pass
+        db.commit()
+    finally:
+        db.close()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     seed_database()
+    expire_stale_mandates()
     yield
 
 
@@ -31,6 +52,9 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -51,6 +75,7 @@ app.include_router(approvals.router)
 app.include_router(paypal.router)
 app.include_router(transactions.router)
 app.include_router(dashboard.router)
+app.include_router(auth.router)
 
 
 @app.get("/")

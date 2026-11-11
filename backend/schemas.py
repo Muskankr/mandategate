@@ -31,6 +31,16 @@ class MandateOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class MandateUpdate(BaseModel):
+    name: Optional[str] = None
+    instruction: Optional[str] = None
+    total_budget: Optional[float] = None
+    currency: Optional[str] = None
+    allowed_categories: Optional[list[str]] = None
+    approval_threshold: Optional[float] = None
+    expiry_date: Optional[str] = None
+
+
 # ── Product ──────────────────────────────────────────────
 
 class ProductOut(BaseModel):
@@ -155,6 +165,13 @@ class CapturePayPalOrderResponse(BaseModel):
     status: str
 
 
+class PayPalWebhookEvent(BaseModel):
+    id: str
+    event_type: str
+    resource: dict
+    summary: Optional[str] = None
+
+
 # ── Dashboard ────────────────────────────────────────────
 
 class AIActivity(BaseModel):
@@ -177,6 +194,35 @@ class CategoryBreakdown(BaseModel):
     percentage: float
     color: str
 
+
+# ── Auth ────────────────────────────────────────────────
+
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class UserOut(BaseModel):
+    id: str
+    username: str
+    email: str
+    created_at: str
+
+    model_config = {"from_attributes": True}
+
+
+# ── Dashboard ────────────────────────────────────────────
 
 class DashboardMetrics(BaseModel):
     total_budget: float

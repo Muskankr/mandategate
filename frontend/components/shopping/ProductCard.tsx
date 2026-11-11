@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { Product, Mandate } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -45,10 +46,12 @@ export function ProductCard({
       <div>
         {/* Product Image & Badges */}
         <div className="relative h-48 w-full bg-navy-900 overflow-hidden">
-          <img
+          <Image
             src={product.image_url}
             alt={product.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
           <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
             <span className="px-2.5 py-1 rounded-full bg-navy-950/80 backdrop-blur-md text-[11px] font-semibold text-slate-200 border border-card-border">
