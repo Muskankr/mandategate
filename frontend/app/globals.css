@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "ag-grid-community/styles/ag-grid.css";
+@import "ag-grid-community/styles/ag-theme-quartz.css";
+
+:root {
+  --background: #080c16;
+  --foreground: #f1f5f9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* Custom modern scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b101e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e2947;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2e3e6b;
+}
+
+/* Custom AG Grid Dark Fintech Styling */
+.ag-theme-quartz-dark {
+  --ag-background-color: #0f1629;
+  --ag-header-background-color: #0b101e;
+  --ag-odd-row-background-color: #0d1424;
+  --ag-header-foreground-color: #94a3b8;
+  --ag-foreground-color: #f1f5f9;
+  --ag-border-color: #1e2947;
+  --ag-row-border-color: #1a243f;
+  --ag-selected-row-background-color: rgba(139, 92, 246, 0.12);
+  --ag-row-hover-color: #16203a;
+  --ag-font-size: 13px;
+  --ag-font-family: inherit;
+  --ag-border-radius: 8px;
+}
+
+.ag-root-wrapper {
+  border: 1px solid #1e2947 !important;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Glass & Glow utilities */
+.glass-panel {
+  background: rgba(15, 22, 41, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(30, 41, 71, 0.8);
+}
+
+.glow-violet {
+  box-shadow: 0 0 25px -4px rgba(139, 92, 246, 0.25);
+}
+
+.glow-blue {
+  box-shadow: 0 0 25px -4px rgba(59, 130, 246, 0.25);
+}
+
