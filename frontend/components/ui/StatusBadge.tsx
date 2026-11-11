@@ -11,6 +11,8 @@ export type BadgeVariant =
   | "PENDING"
   | "BLOCKED"
   | "FAILED"
+  | "APPROVED"
+  | "REJECTED"
   | "EXPIRED"
   | "REVOKED"
   | "INFO"
@@ -37,18 +39,18 @@ export function StatusBadge({
   let icon = <Clock className="w-3.5 h-3.5" />;
   let defaultLabel = status;
 
-  if (["ALLOWED", "SUCCESS", "COMPLETED", "ACTIVE"].includes(norm)) {
+  if (["ALLOWED", "SUCCESS", "COMPLETED", "ACTIVE", "APPROVED"].includes(norm)) {
     colorClasses = "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
     icon = <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />;
-    defaultLabel = norm === "ALLOWED" ? "Allowed" : norm === "ACTIVE" ? "Active" : "Completed";
+    defaultLabel = norm === "ALLOWED" ? "Allowed" : norm === "ACTIVE" ? "Active" : norm === "APPROVED" ? "Approved" : "Completed";
   } else if (["APPROVAL_REQUIRED", "PENDING"].includes(norm)) {
     colorClasses = "bg-amber-500/10 text-amber-400 border-amber-500/30";
     icon = <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />;
     defaultLabel = norm === "APPROVAL_REQUIRED" ? "Approval Required" : "Pending";
-  } else if (["BLOCKED", "FAILED"].includes(norm)) {
+  } else if (["BLOCKED", "FAILED", "REJECTED"].includes(norm)) {
     colorClasses = "bg-rose-500/10 text-rose-400 border-rose-500/30";
     icon = <XCircle className="w-3.5 h-3.5 text-rose-400" />;
-    defaultLabel = norm === "BLOCKED" ? "Blocked" : "Failed";
+    defaultLabel = norm === "BLOCKED" ? "Blocked" : norm === "REJECTED" ? "Rejected" : "Failed";
   } else if (["EXPIRED", "REVOKED"].includes(norm)) {
     colorClasses = "bg-slate-500/10 text-slate-400 border-slate-600/30";
     icon = <Clock className="w-3.5 h-3.5 text-slate-400" />;

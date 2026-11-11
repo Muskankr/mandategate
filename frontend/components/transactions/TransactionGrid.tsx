@@ -186,7 +186,7 @@ export function TransactionGrid({
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5 bg-navy-900 border border-card-border rounded-lg p-1 text-xs">
             <span className="text-slate-500 px-1 text-[11px] font-semibold uppercase">Status:</span>
-            {["ALL", "COMPLETED", "BLOCKED"].map((st) => (
+            {["ALL", "COMPLETED", "PENDING", "BLOCKED", "FAILED"].map((st) => (
               <button
                 key={st}
                 onClick={() => setStatusFilter(st)}

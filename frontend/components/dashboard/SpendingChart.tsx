@@ -87,6 +87,16 @@ export function SpendingChart({ data }: SpendingChartProps) {
           <Tooltip content={<CustomTooltip />} />
           <Area
             type="monotone"
+            dataKey="budget_cap"
+            stroke="#3b82f6"
+            strokeWidth={1.5}
+            strokeDasharray="6 3"
+            fillOpacity={1}
+            fill="url(#budgetGradient)"
+            name="Budget Cap"
+          />
+          <Area
+            type="monotone"
             dataKey="amount"
             stroke="#8b5cf6"
             strokeWidth={2.5}
